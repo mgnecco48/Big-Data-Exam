@@ -1,0 +1,9 @@
+column_name,data_type,description,controlled_vocabulary
+respondent_id,Integer,Unique synthetic identifier,Not applicable (unique sequential identifier)
+education_level,Categorical,Academic level category,Graduate, Postgraduate, Undergraduate
+study_hours_per_day,Integer,Daily study duration (1 to 6 hours),1, 2, 3, 4, 5, 6
+preferred_learning_method,Text,Preferred method of learning,Interactive discussion, Practice exercises, Reading notes, Recorded tutorials, Video lectures
+main_learning_challenge,Text,Primary academic challenge,Academic workload pressure, Difficulty understanding concepts, Internet connectivity issues, Lack of concentration, Low motivation, Time management difficulty
+motivation_level,Categorical,Learning motivation level,High, Low, Medium
+online_learning_opinion,Text,Opinion on online learning,Free text (50-150 words)
+device_used_for_study,Categorical,Primary study device,Laptop, Mobile, Tablet
