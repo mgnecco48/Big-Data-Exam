@@ -1,0 +1,12 @@
+.DS_Store
+.DS-store
+Thumbs.db
+desktop.ini
+.Spotlight-V100
+.Trashes
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+AGENTS.md
