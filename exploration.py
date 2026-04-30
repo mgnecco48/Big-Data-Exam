@@ -10,3 +10,11 @@ df.createOrReplaceTempView("students")
 df.printSchema()
 
 spark.sql("select education_level from students limit 5").show()
+spark.sql(
+    "select education_level, count(*) as count from students group by education_level"
+).show()
+spark.sql("select motivation_level from students limit 10").show()
+
+spark.sql("select online_learning_opinion from students limit 10").show()
+
+spark.sql("select * from students limit 5").show()
