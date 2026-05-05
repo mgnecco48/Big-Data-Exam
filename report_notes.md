@@ -1,0 +1,67 @@
+# Report Notes
+
+## Role of MongoDB in the Pipeline
+
+MongoDB is used to store the dataset after it has been processed with PySpark. Instead of storing only a direct copy of the original CSV file, each respondent is stored as a document in the `processed_dataset` collection.
+
+The original columns, such as education level, study hours, learning method, challenge, motivation level, and study device, are kept. In addition, the cleaned opinion tokens from the free-text field are stored as a list inside the same document. This lets us keep the structured data and the processed text data together.
+
+The `word_count` collection stores the word count result, with one document per relevant word and its count/percentage across opinions. This collection can be used directly for word-frequency visualizations, while `processed_dataset` can be used for respondent-level filtering and Tableau dashboards.
+
+## MongoDB Collection Design
+
+The final MongoDB design uses two collections:
+
+- `processed_dataset`: one document per respondent, containing the original dataset fields plus a `tokens` list created from the free-text opinion field.
+- `word_count`: one document per relevant word, containing the word, the number of opinions containing that word, and the percentage of opinions in which it appears.
+
+This design keeps the respondent-level data in one main collection, which is easier to use in Tableau than splitting the original fields and processed tokens into separate collections. The `word_count` collection is separate because it represents word summary results rather than individual respondents.
+
+For other types of use, we could also create a separate collection containing only `respondent_id` and the cleaned `tokens` for each opinion. That would make token-based MongoDB queries simpler and more focused, for example when searching for all responses that contain a certain word. However, this project does not need that extra collection because the main goal is to prepare the data for Tableau, where filtering and visual exploration can be done directly from the enriched `processed_dataset` collection.
+
+## Use of Original Respondent ID
+
+The original `respondent_id` is used as the MongoDB `_id` field in the `processed_dataset` collection. This keeps the original unique identifier from the dataset and avoids creating unrelated MongoDB IDs. It also makes it easier to connect a MongoDB document back to the original CSV row.
+
+For the `word_count` collection, MongoDB can generate the `_id` automatically. The word itself is kept as a normal `word` field, which is simpler to read and easier to use when exporting or visualizing the collection.
+
+## Text Processing Design
+
+The free-text `online_learning_opinion` field is cleaned in PySpark before loading the data into MongoDB. The processing steps are:
+
+- Splitting each opinion into individual words with `split` and `explode`.
+- Keeping `respondent_id` so each cleaned word can be connected back to the original opinion.
+- Lowercasing words to avoid counting the same word separately because of capitalization.
+- Removing common punctuation marks while preserving hyphenated terms such as `theory-based` and `self-discipline`.
+- Removing English stopwords with NLTK.
+- Removing dataset-specific frequent words such as `online` and `learning`, because they appear often due to the topic of the dataset and do not add much analytical value.
+
+After cleaning, the words are grouped back to respondent level using a token list. This creates a useful MongoDB structure where each opinion document contains both the original text and the cleaned words extracted from it.
+
+## Word Percentage Calculation
+
+The word-frequency table uses `countDistinct("respondent_id")` instead of a simple word count. This measures how many opinions contain each word, instead of only counting how many times the word appears in total.
+
+This is safer because a word may appear more than once in the same opinion. Counting unique respondent IDs avoids making repeated words inside one response look more important than they are.
+
+## Scalability Note
+
+The notebook currently converts Spark DataFrames to local Python dictionaries using `.collect()` before inserting them into MongoDB with `insert_many()`. For this synthetic dataset of 10,000 rows, this is acceptable because the dataset is small enough to fit in local memory.
+
+For larger datasets, `.collect()` would not work as well because it moves all Spark data into the main Python process. A better design for larger data would use one of these approaches:
+
+- The MongoDB Spark Connector to write Spark DataFrames directly into MongoDB.
+- `foreachPartition()` to insert records partition by partition instead of collecting all records at once.
+- Batch writes per Spark partition to reduce memory use and avoid overloading the main process.
+
+This limitation should be mentioned in the report as an implementation tradeoff: the current approach is simple and good enough for this dataset size, while a connector-based or partition-based write strategy would be better for truly large-scale data.
+
+## Tableau Design Decision
+
+The project keeps most visual exploration in Tableau, especially category distributions, heatmaps, and dashboard filtering. PySpark is used for the preprocessing steps that Tableau is less suited for, especially text splitting, stopword removal, cleaned token creation, and word counting.
+
+This gives each technology a clear role:
+
+- PySpark performs preprocessing and transformations.
+- MongoDB stores the enriched documents and word count results.
+- Tableau visualizes the structured fields and processed outputs.
