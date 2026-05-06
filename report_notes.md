@@ -65,3 +65,29 @@ This gives each technology a clear role:
 - PySpark performs preprocessing and transformations.
 - MongoDB stores the enriched documents and word count results.
 - Tableau visualizes the structured fields and processed outputs.
+
+## Connecting MongoDB to Tableau
+
+To visualize MongoDB data in Tableau, an extra connection layer is needed because Tableau works most naturally with tabular data sources. One option is the MongoDB Connector for BI, which runs a service called `mongosqld`. This service acts as a bridge between MongoDB and SQL-based BI tools. Tableau connects to `mongosqld` through ODBC, while `mongosqld` connects to the MongoDB database and exposes the document collections in a table-like form.
+
+The general process is:
+
+- Install and run MongoDB.
+- Load the processed collections into MongoDB.
+- Install the MongoDB BI Connector and its ODBC driver.
+- Start `mongosqld` and point it to the MongoDB server, usually with a MongoDB URI such as `mongodb://localhost:27017`.
+- Configure Tableau to connect through ODBC to the host and port where `mongosqld` is running, often `127.0.0.1:3307` by default.
+- Select the MongoDB database and collections exposed by the connector.
+
+This setup is useful because it allows Tableau to work with MongoDB collections without manually exporting everything to CSV first. However, it also adds complexity. The user must have MongoDB, the BI Connector, the ODBC driver, Tableau, and the correct local connection settings installed and working at the same time.
+
+There is also an important limitation: the MongoDB BI Connector and `mongosqld` are legacy tools and are deprecated, with end-of-life planned for September 2026. This means the approach can still be useful for a class project or an existing setup, but it is not the best long-term choice for a new production system. MongoDB recommends newer SQL interface options for future projects.
+
+This affects how easy the project is to reuse. The pipeline is not fully "plug and play" for another user because several separate tools must be installed and configured correctly before Tableau can connect to MongoDB. For a more portable version of the project, it may be better to export Tableau-ready files from PySpark or MongoDB, such as CSV or Parquet outputs, or to document the required setup steps very clearly in a README file.
+
+## Introduction/Scope/Parts of the project
+
+The project is divided in two parts, First we have the framework parts, how to clean the dataset, and insert it into MongoDB. Then we will do a 'hypothetical'
+analysis of our dataset, where we are using the processed dataset we produced in our first part, to answer some research questions that we consider would be
+relevant for a future research project with real-world data. We will create visualizations in Tableau showing the hypothetical answers to our research
+questions, and we will also explain how we would use MongoDB to support the visualizations and filtering in Tableau.
