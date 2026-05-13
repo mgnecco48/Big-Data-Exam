@@ -6,18 +6,25 @@ MongoDB is used to store the dataset after it has been processed with PySpark. I
 
 The original columns, such as education level, study hours, learning method, challenge, motivation level, and study device, are kept. In addition, the cleaned opinion tokens from the free-text field are stored as a list inside the same document. This lets us keep the structured data and the processed text data together.
 
-The `word_count` collection stores the word count result, with one document per relevant word and its count/percentage across opinions. This collection can be used directly for word-frequency visualizations, while `processed_dataset` can be used for respondent-level filtering and Tableau dashboards.
+The `word_count` collection stores the word count result, with one document per relevant word and its count/percentage across opinions. This collection can be used directly for word-frequency visualizations, while `processed_dataset` can be used for respondent-level filtering and Tableau dashboards. A third collection, `opinion_token_bridge`, stores the long-format relationship between each respondent and each cleaned token in their opinion. This makes token-based filtering easier in Tableau because each respondent-token pair is represented as a separate row, without repeating the full opinion text in the bridge collection.
+
+For this specific project, the dataset is static. Since the CSV file does not change over time, connecting Tableau to MongoDB is not strictly necessary from a technical point of view. A simpler workflow could process the CSV with PySpark, export Tableau-ready CSV files, and connect Tableau directly to those outputs. The MongoDB step is still useful because it demonstrates how the same pipeline could support a more realistic data system where responses are not fixed in advance.
+
+MongoDB becomes more valuable if the project grows into a monitoring system for student sentiment about a specific online learning platform. In that scenario, new responses could be inserted as students submit them, PySpark or another processing layer could add sentiment scores and cleaned tokens, and Tableau could visualize updated trends from a central database instead of relying on manually regenerated files. MongoDB is well suited to that kind of workflow because it can store structured survey attributes together with semi-structured analysis outputs such as token arrays, sentiment labels, topic labels, or platform metadata.
+
+This also makes the pipeline easier to extend. If future analysis adds new text features or metadata fields, MongoDB documents can include those fields without redesigning a rigid table structure first. At the same time, the bridge collection gives Tableau a more relational view of the token data, which is useful because Tableau works best when filter values are exposed as rows or columns rather than nested arrays inside documents.
+
+The project uses a remote MongoDB cluster instead of only a local MongoDB instance. For this static dataset, a local database would be enough, but a remote cluster better reflects how a larger big data pipeline would share processed outputs across tools and users. It also makes the later Tableau connection more realistic, because the current recommended practice is to connect BI tools to a hosted MongoDB deployment rather than relying on a database running only on one local machine.
 
 ## MongoDB Collection Design
 
-The final MongoDB design uses two collections:
+The final MongoDB design uses three collections:
 
 - `processed_dataset`: one document per respondent, containing the original dataset fields plus a `tokens` list created from the free-text opinion field.
 - `word_count`: one document per relevant word, containing the word, the number of opinions containing that word, and the percentage of opinions in which it appears.
+- `opinion_token_bridge`: one document per respondent-token pair, containing the `respondent_id` and cleaned token.
 
-This design keeps the respondent-level data in one main collection, which is easier to use in Tableau than splitting the original fields and processed tokens into separate collections. The `word_count` collection is separate because it represents word summary results rather than individual respondents.
-
-For other types of use, we could also create a separate collection containing only `respondent_id` and the cleaned `tokens` for each opinion. That would make token-based MongoDB queries simpler and more focused, for example when searching for all responses that contain a certain word. However, this project does not need that extra collection because the main goal is to prepare the data for Tableau, where filtering and visual exploration can be done directly from the enriched `processed_dataset` collection.
+This design keeps the respondent-level data in one main collection, stores aggregate word-frequency results separately, and exposes token membership in a long format for Tableau filtering. The `word_count` collection is separate because it represents summary results rather than individual respondents. The `opinion_token_bridge` collection is separate because it represents a many-to-many relationship: one opinion can contain many relevant tokens, and the same token can appear in many opinions.
 
 ## Use of Original Respondent ID
 
@@ -69,6 +76,8 @@ This gives each technology a clear role:
 ## Connecting MongoDB to Tableau
 
 To visualize MongoDB data in Tableau, an extra connection layer is needed because Tableau works most naturally with tabular data sources. One option is the MongoDB Connector for BI, which runs a service called `mongosqld`. This service acts as a bridge between MongoDB and SQL-based BI tools. Tableau connects to `mongosqld` through ODBC, while `mongosqld` connects to the MongoDB database and exposes the document collections in a table-like form.
+
+Because the data is stored in a remote MongoDB cluster, Tableau can connect to the shared database environment instead of depending on local files or a local MongoDB instance. This is closer to a production BI workflow, where dashboards usually read from hosted databases that can be accessed consistently across machines.
 
 The general process is:
 
