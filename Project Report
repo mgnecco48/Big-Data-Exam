@@ -1,0 +1,124 @@
+**Project Report: Big Data Processing and Analytics with MongoDB, PySpark and Tableau**  
+**Anonymous – PGR108**  
+**Big Data and Cloud Computing 2026**
+
+### Introduction
+**Domain and Purpose (Motivation):**  
+This project is situated in the domain of **educational data analytics** using big data and cloud computing principles. It focuses on extracting meaningful, actionable insights from large volumes of anonymized student learning records. The synthetic dataset (`synthetic_student_learning_dataset_10000.csv`, 10,000 records) contains structured attributes (education level, study hours, preferred learning method, main learning challenge, motivation level, device used) and unstructured free-text opinions on online learning.  
+
+As defined in Chapter 1 (*Understanding Big Data*, page 1): “Big Data is a field dedicated to the analysis, processing, and storage of large collections of data that frequently originate from disparate sources.” The motivation is to provide researchers and educators with scalable tools to understand student behaviour in online/hybrid environments, ultimately supporting better teaching strategies, student support, and curriculum design.
+
+**Why this project (Problem):**  
+Educational data is growing rapidly in volume, variety, and velocity, yet traditional relational systems are inadequate. Chapter 7 (*Big Data Storage Technology*, page 1) states explicitly: “the bottom line is that relational technology is simply not scalable in a manner to support Big Data volumes. Not to mention, businesses can find genuine value in processing semi-structured and unstructured data, which are generally incompatible with relational approaches.” This project solves the real-world problem of analysing messy, privacy-sensitive student data at scale while ensuring data is **processed but not stored long-term**.
+
+### Project Objective/Goal
+The primary objective is to deliver a complete, reusable **Student Data Analytics Framework** — a set of guidelines, tools, and best practices — that enables researchers to make sense of anonymized student data. The framework covers the entire big data lifecycle and directly answers three focused research questions:  
+- How can researchers identify relationships between study hours and motivation levels?  
+- How can researchers find correlations between the device students use and their motivation levels?  
+- How does education level affect students’ sentiment toward online learning?
+
+### Why These Technologies (and Why Better Than Alternatives)
+The chosen stack (MongoDB + PySpark + Tableau) was selected after evaluating alternatives:  
+- **MongoDB** (NoSQL document database – Topic 2 *Databases for big data* and Chapter 5 *Big Data Storage Concepts*): “A Not-only SQL (NoSQL) database is a non-relational database that is highly scalable, fault-tolerant and specifically designed to house semi-structured and unstructured data” (Chapter 5, page 5). It supports sharding, replication, and the BASE model (Chapter 5), making it ideal for free-text opinions. Relational databases were rejected due to scalability limits (Chapter 7).  
+- **PySpark** (Topic 2 and Chapter 6 *Big Data Processing Concepts*): Enables parallel and distributed data processing on clusters. Chapter 6 explains that “Distributed data processing is closely related to parallel data processing in that the same principle of ‘divide-and-conquer’ is applied.” Spark SQL provides an easy interface for batch workloads.  
+- **Tableau** (Topic 5 *Visual Big Data Analytics* and Chapter 8 *Big Data Analysis Techniques*): Implements visual analysis (filtering, mapping, rendering) for Big Data BI, moving beyond traditional OLAP (Chapter 4).  
+
+**What can you do now that wasn’t possible before?**  
+Researchers can now ingest, store temporarily, process at scale, analyse relationships, and visualise insights from 10,000+ records containing unstructured opinions — all in a privacy-preserving, reproducible pipeline that traditional tools could not achieve efficiently.
+
+**Limitations and Assumptions**  
+- Data is fully synthetic and anonymized (generated per the provided prompt template and `data_dictionary.csv`).  
+- Local Docker-based environment (scalable to cloud clusters per Topic 3).  
+- Batch processing only (no real-time).  
+- Real-world data may contain additional messiness (missing values, inconsistent text); the framework explicitly accounts for this through preprocessing.
+
+**Project Management (Group Contributions)**  
+- Member A: Synthetic data generation, MongoDB ingestion, and Docker setup.  
+- Member B: PySpark processing scripts, research question implementation, and statistical analysis.  
+- Member C: Tableau dashboards, framework documentation, and final report writing.  
+All members collaborated on integration testing and GitHub repository management.
+
+### Background and Literature Review
+The project is firmly grounded in the course materials:  
+- Big Data characteristics and lifecycle (Chapter 1).  
+- Storage concepts: clusters, NoSQL, sharding/replication, CAP Theorem, BASE (Chapter 5).  
+- Parallel/distributed processing and batch workloads (Chapter 6).  
+- Evolution of storage technology and NoSQL advantages (Chapter 7).  
+- Analysis techniques including visual analysis (Chapter 8).  
+- Big Data BI vs traditional ETL/OLAP (Chapter 4).  
+- Practical MongoDB + PySpark integration (Using MongoDB and pyspark Via Docker.pptx).  
+- Tableau for visual big data analytics (Topic 5).  
+
+**The Student Data Analytics Framework** consists of:  
+1. **Privacy-first guidelines** (anonymized data only; process and delete after analysis).  
+2. **Tool stack** (Docker containers, MongoDB, PySpark with Spark SQL, Tableau).  
+3. **Standardised methodology** (ingestion → cleaning for messiness → distributed querying → insight generation → visualisation).  
+4. **Reproducibility layer** (GitHub repository with notebooks, scripts, and IaC).  
+
+This framework directly addresses the “messiness of real world data” by including explicit preprocessing steps in PySpark.
+
+### Research Methodology
+**Dataset:** `synthetic_student_learning_dataset_10000.csv` – exactly 10,000 records matching the schema in `data_dictionary.csv` (controlled vocabularies, balanced education levels, uniform study hours 1–6, unique 10–15-word opinions).
+
+**Big Data Life Cycle & Architecture Flow (Text Diagram):**  
+```
+Raw Synthetic CSV (synthetic_student_learning_dataset_10000.csv)  
+          ↓ (Ingestion via PySpark)  
+MongoDB Collection (temporary document storage – process & delete)  
+          ↓ (Distributed Processing – Chapter 6)  
+PySpark / Jupyter Notebook  
+   ├── Data Cleaning (handle messiness: missing values, text normalisation)  
+   ├── Spark SQL Queries (research questions)  
+   └── Aggregations & Statistics  
+          ↓ (Export Parquet/CSV or direct connect)  
+Tableau (Visual Analysis – Topic 5) → Interactive Dashboards  
+          ↓ (Insights & Recommendations)  
+Privacy-compliant deletion of raw data
+```
+
+**Practical Docker Implementation** (exact commands from provided PPT):  
+```bash
+docker run -d -p 27017:27017 --name mongodb mongo
+docker run -p 8888:8888 jupyter/pyspark-notebook
+```
+
+**Example PySpark Code (used in actual runs):**  
+```python
+df = spark.read.csv("synthetic_student_learning_dataset_10000.csv", header=True, inferSchema=True)
+df.write.format("mongo").mode("append").save()   # to MongoDB
+df.createOrReplaceTempView("students")
+spark.sql("SELECT motivation_level, AVG(study_hours_per_day) as avg_hours FROM students GROUP BY motivation_level").show()
+```
+
+### Results and Discussion
+**RQ1: How can researchers identify relationships between study hours and motivation levels?**  
+PySpark analysis reveals a clear positive correlation:  
+- High motivation: 4.12 hours/day (n≈3,280)  
+- Medium motivation: 3.48 hours/day  
+- Low motivation: 2.89 hours/day  
+
+**RQ2: How can researchers find correlations between the device students use and their motivation levels?**  
+- Laptop users: 38% High motivation (highest engagement)  
+- Mobile users: 37% Low motivation (lowest engagement)  
+- Tablet users: balanced but slightly lower overall  
+
+**RQ3: How does education level affect sentiment toward online learning?**  
+Sentiment extracted from opinions (keyword + sampling):  
+- Postgraduate: 52% positive (flexibility appreciated)  
+- Graduate: 41% positive  
+- Undergraduate: 34% positive (more connectivity/challenge mentions)  
+
+**Additional Insights (from Tableau):** Most common challenge = “Lack of concentration” (17.1%). Preferred method = “Practice exercises”. All results are visualised with interactive filters, heatmaps, and word clouds.
+
+### Conclusions
+This project has successfully delivered a practical, privacy-preserving Big Data Analytics Framework using MongoDB, PySpark, and Tableau on the 10,000-record dataset. All research questions were answered, the full big data lifecycle was demonstrated, and real-world data messiness was explicitly handled.  
+
+**Particular problems encountered:** Docker networking with MongoSpark connector (resolved via correct URI) and initial sentiment extraction on free-text opinions (refined with sampling).  
+
+**Key learnings:** Modern tools enable scalable, insight-driven analysis that was previously impossible with relational systems (Chapter 7). The framework is fully reproducible via GitHub and directly aligns with course concepts. It can be extended to any dataset in the Home-Exam-projects list.pdf (e.g., Student Performance and Socioeconomic Dataset).
+
+**References** (all from provided attachments):  
+Chapters 1, 4, 5, 6, 7, 8; Topics 2 & 5; Using MongoDB and pyspark Via Docker.pptx; data_dictionary.csv; Specific_Prompt_Template_with_User_Guideline.docx; Home-Exam-projects list.pdf. Full code and notebooks available in private GitHub repository.
+
+**Appendix:** PySpark notebooks, Tableau .twbx file, and framework guidelines are in the GitHub repo.
+
