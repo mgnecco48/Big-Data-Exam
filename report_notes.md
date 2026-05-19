@@ -75,24 +75,23 @@ This gives each technology a clear role:
 
 ## Connecting MongoDB to Tableau
 
-To visualize MongoDB data in Tableau, an extra connection layer is needed because Tableau works most naturally with tabular data sources. One option is the MongoDB Connector for BI, which runs a service called `mongosqld`. This service acts as a bridge between MongoDB and SQL-based BI tools. Tableau connects to `mongosqld` through ODBC, while `mongosqld` connects to the MongoDB database and exposes the document collections in a table-like form.
+To visualize MongoDB data in Tableau, the data should be stored in MongoDB Atlas rather than only in a local MongoDB instance. Atlas provides a hosted MongoDB cluster that can be accessed remotely by different group members or tools with the correct permissions. This is also the recommended direction for Tableau workflows, because Tableau can connect to a shared cloud database environment instead of relying on one person's local machine.
 
 Because the data is stored in a remote MongoDB cluster, Tableau can connect to the shared database environment instead of depending on local files or a local MongoDB instance. This is closer to a production BI workflow, where dashboards usually read from hosted databases that can be accessed consistently across machines.
 
 The general process is:
 
-- Install and run MongoDB.
-- Load the processed collections into MongoDB.
-- Install the MongoDB BI Connector and its ODBC driver.
-- Start `mongosqld` and point it to the MongoDB server, usually with a MongoDB URI such as `mongodb://localhost:27017`.
-- Configure Tableau to connect through ODBC to the host and port where `mongosqld` is running, often `127.0.0.1:3307` by default.
-- Select the MongoDB database and collections exposed by the connector.
+- Create a MongoDB Atlas cluster and configure database users, network access, and permissions.
+- Load the processed collections from the PySpark pipeline into the Atlas database using the Atlas connection string.
+- Use Tableau's recommended MongoDB Atlas connection method, so Tableau reads from the hosted cluster rather than from local files or a local database.
+- Select the Atlas database and collections needed for the visualizations.
+- Share access through Atlas permissions so different users can work from the same stored data source.
 
-This setup is useful because it allows Tableau to work with MongoDB collections without manually exporting everything to CSV first. However, it also adds complexity. The user must have MongoDB, the BI Connector, the ODBC driver, Tableau, and the correct local connection settings installed and working at the same time.
+This setup is useful because it allows Tableau to work with MongoDB collections without manually exporting everything to CSV first. It is also more practical for collaboration, since the data is stored centrally in Atlas and can be reached remotely by different users instead of being tied to one local installation.
 
-There is also an important limitation: the MongoDB BI Connector and `mongosqld` are legacy tools and are deprecated, with end-of-life planned for September 2026. This means the approach can still be useful for a class project or an existing setup, but it is not the best long-term choice for a new production system. MongoDB recommends newer SQL interface options for future projects.
+There is also an important limitation with older local-style connection approaches: the MongoDB BI Connector and `mongosqld` are legacy tools and are deprecated, with end-of-life planned for September 2026. This is another reason to prefer an Atlas-based setup for a new project, because it follows the recommended hosted workflow instead of depending on deprecated local bridge tools.
 
-This affects how easy the project is to reuse. The pipeline is not fully "plug and play" for another user because several separate tools must be installed and configured correctly before Tableau can connect to MongoDB. For a more portable version of the project, it may be better to export Tableau-ready files from PySpark or MongoDB, such as CSV or Parquet outputs, or to document the required setup steps very clearly in a README file.
+This affects how easy the project is to reuse. With Atlas, another user does not need to recreate the same local MongoDB setup, but they still need the correct Atlas credentials, network access, and Tableau connection configuration. For a more portable version of the project, it may still be useful to export Tableau-ready files from PySpark or MongoDB, such as CSV or Parquet outputs, or to document the required Atlas setup steps very clearly in a README file.
 
 ## Introduction/Scope/Parts of the project
 
