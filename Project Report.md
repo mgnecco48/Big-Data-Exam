@@ -67,7 +67,7 @@ Raw CSV (synthetic_student_learning_dataset_10000.csv)
 Text Processing & Sentiment (split/explode, lower, regexp_replace, NLTK stopwords, VADER)  
           ↓  
 MongoDB (3 collections: processed_dataset with tokens, word_count, opinion_token_bridge)  
-          ↓ (direct Tableau connection)  
+          ↓ (Mongo Atlas cloud. Direct Tableau connection)  
 Analysis & Aggregation  
           ↓  
 Tableau (Vizualization.twb / .twbx) → Interactive Dashboards  
