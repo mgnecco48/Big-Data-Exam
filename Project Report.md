@@ -21,7 +21,7 @@ The primary objective is to deliver a complete, reusable **Student Data Analytic
 The stack was chosen after evaluating alternatives and is fully implemented in the provided files:  
 - **MongoDB** (NoSQL document database – Topic 2 and Chapter 5): Used for flexible storage of respondent-level documents with embedded token arrays (`processed_dataset` collection), word-frequency summaries (`word_count`), and long-format token bridge (`opinion_token_bridge`). This design is explicitly described in `report_notes.md` under “MongoDB Collection Design” and follows BASE properties with sharding/replication support (Chapter 5). Relational databases were rejected due to scalability limits (Chapter 7).  
 - **PySpark** (Topic 2 and Chapter 6): Handles parallel/distributed processing, text cleaning, sentiment analysis (VADER), token extraction, and aggregation. The complete implementation is in `Data_Into_Mongo.ipynb` (including explode/split, lowercasing, punctuation removal, NLTK stopwords, custom stopword filtering, and grouping back to respondent level).  
-- **Tableau** (Topic 5 and Chapter 8): Provides visual analysis through the workbook `Vizualization.twb` / `Vizualization.twbx`, connecting via MongoDB BI Connector (noted as legacy but used for demonstration in `report_notes.md`).  
+- **Tableau** (Topic 5 and Chapter 8): Provides visual analysis through the workbook `Vizualization.twb` / `Vizualization.twbx`. The preferred workflow is to connect Tableau to MongoDB Atlas, because Atlas provides a shared hosted database that is easier for group members and BI tools to access than a database running only on one local machine. Older local bridge approaches such as the MongoDB BI Connector and `mongosqld` are legacy/deprecated, so Atlas is the better direction for a new project.  
 
 **What can you do now that wasn’t possible before?**  
 Researchers can now ingest, clean, store temporarily in a document database, perform distributed text processing and aggregation, and create interactive dashboards — all while maintaining privacy (process and delete) and handling real-world data messiness.
@@ -66,8 +66,8 @@ Raw CSV (synthetic_student_learning_dataset_10000.csv)
           ↓ (PySpark – Data_Into_Mongo.ipynb)  
 Text Processing & Sentiment (split/explode, lower, regexp_replace, NLTK stopwords, VADER)  
           ↓  
-MongoDB (3 collections: processed_dataset with tokens, word_count, opinion_token_bridge)  
-          ↓ (Mongo Atlas cloud. Direct Tableau connection)  
+MongoDB Atlas (3 collections: processed_dataset with tokens, word_count, opinion_token_bridge)  
+          ↓ (Tableau connects to the shared Atlas database)  
 Analysis & Aggregation  
           ↓  
 Tableau (Vizualization.twb / .twbx) → Interactive Dashboards  
@@ -100,6 +100,11 @@ Sentiment scores and labels (added via VADER in `Data_Into_Mongo.ipynb`) grouped
 - Interactive Tableau dashboards (`Vizualization.twb`) with filters on all dimensions.  
 - Full reproducibility via GitHub (notebooks, Docker setup, and IaC scripts).
 
+**MongoDB Atlas and Tableau Design Decision:**  
+For this static synthetic dataset, Tableau could technically connect directly to Tableau-ready CSV exports from PySpark. The MongoDB step is still useful because it demonstrates how the same pipeline could support a more realistic system where responses are updated over time and shared through a central database. MongoDB Atlas is preferred over a purely local MongoDB instance because it better reflects a collaborative BI workflow: processed collections can be stored centrally, accessed by different users with the correct permissions, and connected to Tableau without depending on one person's local machine.
+
+This also makes the pipeline easier to extend. If future analysis adds text features or metadata fields, MongoDB documents can include fields such as token arrays, sentiment labels, topic labels, or platform metadata without redesigning a rigid table structure first. The `opinion_token_bridge` collection still gives Tableau a relational, long-format view of token membership, which is useful because Tableau works best when filter values are exposed as rows or columns rather than nested arrays.
+
 ### Conclusions
 This project has successfully delivered a practical, privacy-preserving **Student Data Analytics Framework** using the exact pipeline documented in `report_notes.md`, `Data_Into_Mongo.ipynb`, and `Vizualization.twb`. The framework provides researchers with the tools and guidelines needed to answer complex questions about student learning behaviour while respecting privacy and handling real-world data messiness.
 
@@ -108,7 +113,7 @@ The end-to-end solution was validated on the synthetic test dataset and is direc
 **Particular problems encountered:**  
 - MongoSpark connector configuration in Docker (resolved via URI).  
 - Text cleaning for domain-specific stopwords and punctuation (handled in `Data_Into_Mongo.ipynb`).  
-- Tableau connection to remote MongoDB (BI Connector noted as legacy in `report_notes.md`).
+- Tableau connection to remote MongoDB, where MongoDB Atlas is preferred because older local BI Connector and `mongosqld` approaches are legacy/deprecated.
 
 **Key learnings:** Modern big data tools (MongoDB for storage, PySpark for processing, Tableau for visualisation) enable scalable insight generation that was previously impossible with traditional systems (Chapter 7). The framework is fully reproducible via GitHub.
 
