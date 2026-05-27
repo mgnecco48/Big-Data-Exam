@@ -1,0 +1,6 @@
+pyspark
+pandas
+vaderSentiment
+pymongo
+pymongo[srv]
+nltk
