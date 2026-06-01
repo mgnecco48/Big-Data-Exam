@@ -15,6 +15,8 @@ The workspace already includes:
 
 This means you do **not** need to create or use your own MongoDB database unless you want to rebuild the pipeline yourself.
 
+You can also view the finished visualization online, at Tableau Public, available [here](https://public.tableau.com/views/OnlineLearningAnalysis_17798829990200/OPINIONEXPLORER?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
+
 ---
 
 Otherwise:
